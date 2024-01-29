@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="shortcut icon" href="./favicon.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js"></script>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-theme-classic"/>
+    <script src="https://cdn.jsdelivr.net/npm/typesense@1/dist/typesense.min.js"></script>
+
+    <title>TMU</title>
+</head>
+
+<body>
+<header class="header">
+    <h1 class="header-title">
+        Autocomplete Demo
+    </h1>
+    
+</header>
+
+<div class="container">
+    <div class="search-panel">
+        <div id="autocomplete"></div>
+    </div>
+
+</div>
+
+
+<script>
+    let typesenseClient = new Typesense.Client({
+        'nodes': [
+            {'host': '13qbksj65nfyztrpp-1.a1.typesense.net', 'port': '443', 'protocol': 'https'}
+        ],
+        'apiKey': 'DY4HS6uXPWaRSOWeWoEt90u1AbiQnkQ1',
+        'connectionTimeoutSeconds': 6
+    })
+
+
+    const {autocomplete} = window['@algolia/autocomplete-js'];
+    autocomplete({
+        container: '#autocomplete',
+        placeholder: 'Search for offer and campaign. Eg: Shopify',
+        async getSources({query}) {
+
+            const collections = ('campaigncollection');
+
+            const results = await typesenseClient.collections(collections).documents().search({
+                q: query,
+                query_by: ['name', 'description', 'category_names', 'description_it', 'description_es'],
+                highlight_full_fields: 'name',
+                include_fields: 'name'
+            })
+
+            return [
+                {
+                    sourceId: 'predictions',
+                    getItems() {
+                        return results.hits;
+                    },
+                    getItemInputValue({item}) {
+                        return item.document.name;
+                    },
+                    templates: {
+                        item({ item, html }) {
+                            // html is from the `htm` package. Docs: https://github.com/developit/htm
+
+                            // Get the highlighted HTML fragment from Typesense results
+                            const html_fragment = html`${item.highlights.find(h => h.field === 'name' || {}).value || item.document['name']}`
+
+                            // Send the html_fragment to `html` tagged template
+                            // Reference: https://github.com/developit/htm/issues/226#issuecomment-1205526098
+                            return html`<div dangerouslySetInnerHTML=${{ __html: html_fragment }}></div>`
+                        },
+                        noResults() {
+                            return 'No results found.';
+                        },
+                    },
+                },
+            ];
+        },
+    });
+</script>
+</body>
+</html>
