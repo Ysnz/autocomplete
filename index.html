@@ -36,9 +36,9 @@
 <script>
     let typesenseClient = new Typesense.Client({
         'nodes': [
-            {'host': '13qbksj65nfyztrpp-1.a1.typesense.net', 'port': '443', 'protocol': 'https'}
+            {'host': process.env.TYPESENSE_HOST, 'port': '443', 'protocol': 'https'}
         ],
-        'apiKey': 'DY4HS6uXPWaRSOWeWoEt90u1AbiQnkQ1',
+        'apiKey': process.env.TYPESENSE_API_KEY,
         'connectionTimeoutSeconds': 6
     })
 
